@@ -24,7 +24,7 @@ mail_password = os.getenv('MAIL_PASSWORD')
 mail_use_tls = os.getenv('MAIL_USE_TLS')
 mail_use_ssl = os.getenv('MAIL_USE_SSL')
 admin_mail = os.getenv('ADMIN_MAIL')
-print(mail_use_ssl)
+print(mail_username)
 
 #Config
 app = Flask(__name__)
@@ -37,6 +37,8 @@ app.config['MAIL_PASSWORD'] = mail_password
 app.config['MAIL_USE_TLS'] = bool(mail_use_tls)
 app.config['MAIL_USE_SSL'] = bool(mail_use_ssl)
 mail = Mail(app)
+print(bool(mail_use_tls))
+print(bool(mail_use_ssl))
 
 db = SQLAlchemy(app)
 
