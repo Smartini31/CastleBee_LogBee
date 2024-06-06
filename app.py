@@ -444,7 +444,7 @@ def send_notification_email(user_email, title, type, start, end):
     email_body = render_template_string(notification_email_html_content, user_email=user_email, event_title=title, event_type=type, event_start=start, event_end=end)
     stripped_mail = cut_email(user_email)
 
-    msg= Message(subject=f"Nouvelle demande de { stripped_mail }", recipients= [user_email], sender=mail_username)
+    msg= Message(subject=f"Nouvelle demande de { stripped_mail }", recipients= [admin_mail], sender=mail_username)
     msg.html = email_body
 
     mail.send(msg)
