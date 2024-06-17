@@ -14,6 +14,9 @@ from templates.auth.rest_password_email_content import (reset_password_email_htm
 from templates.auth.notification_email_content import (notification_email_html_content)
 from templates.auth.answer_email_content import (answer_email_content)
 
+from dotenv import load_dotenv
+load_dotenv()
+
 #Access Environment Variables
 secret_key = os.getenv("SECRET_KEY")
 sqlalchemy_database_uri = os.getenv('SQLALCHEMY_DATABASE_URI')
@@ -86,7 +89,7 @@ class RegisterForm(FlaskForm):
     email = StringField('E-mail', [validators.Length(min=6, max=50)])
     password = PasswordField('Mot de passe', [
         validators.DataRequired(),
-        validators.EqualTo('Confirmer', message='Les mots de passe ne correspondent pas')
+        validators.EqualTo('confirm', message='Les mots de passe ne correspondent pas')
     ])
     confirm = PasswordField('Confirmer le mot de passe')
 
@@ -122,7 +125,7 @@ class NewPasswordForm(FlaskForm):
     password2 = PasswordField("Nouveau mot de passe", validators=[DataRequired(), EqualTo("password")])
     
 class UserSelectionForm(FlaskForm):
-    user_id = SelectField('Select User', coerce=int, validators=[DataRequired()])
+    user_id = SelectField('Selectionner un utilisateur', coerce=int, validators=[DataRequired()])
 
 @app.route('/')
 def index():
@@ -137,12 +140,11 @@ def password():
 
         # check if someone already register with the email
         user = User.query.filter_by(email=email).first()
-        print(user)
         if user:
             send_reset_password_email(user)
-            flash("User exists")
+            #flash("User exists")
         else:
-            flash("User does not exist")
+            flash("Cette email ne correspond à aucun utilisateur connu")
         
         return redirect(url_for('login'))
         
@@ -161,7 +163,7 @@ def reset_password(token, user_id):
         new_password = sha256_crypt.encrypt(str(form.password.data))
         user.password = new_password
         db.session.commit()
-        flash('You have successfully updated your password')
+        flash('Vous avez mis à jour votre mot de passe avec succès')
         #return render_template("reset_password_success.html", title="Reset Password success")
 
     return render_template("reset_password.html", title="Reset Password", form=form)
@@ -174,18 +176,24 @@ def register():
         email = form.email.data
         password = sha256_crypt.encrypt(str(form.password.data))
 
-        #Check if email is admin email to create the admin account
-        if email == admin_mail:
-            is_admin = True
+        #First check if the mail exists
+        user = User.query.filter_by(email=email).first()
+        if user:
+            flash('Cette utilisateur existe deja')
+            return redirect(url_for('login'))
         else:
-            is_admin = False
+            #Check if email is admin email to create the admin account
+            if email == admin_mail:
+                is_admin = True
+            else:
+                is_admin = False
 
-        new_user = User(email=email, password=password, is_admin=is_admin)
-        db.session.add(new_user)
-        db.session.commit()
+            new_user = User(email=email, password=password, is_admin=is_admin)
+            db.session.add(new_user)
+            db.session.commit()
 
-        flash('You are now registered and can log in', 'success')
-        return redirect(url_for('login'))
+            flash('Vous êtes maintenant inscrit et pouvez vous connecter', 'success')
+            return redirect(url_for('login'))
 
     return render_template('register.html', form=form)
 
@@ -206,10 +214,10 @@ def login():
                 session['email'] = email
                 if user.is_admin == True:
                     session['is_admin'] = True
-                    flash('You are now logged in as admin', 'success')
+                    flash("Vous êtes maintenant connecté en tant qu'administrateur", 'success')
                     return redirect(url_for('admin_dashboard'))
                 else:
-                    flash('You are now logged in', 'success')
+                    flash('Vous êtes maintenant connecté', 'success')
                     return redirect(url_for('dashboard'))
             else:
                 error = 'Invalid login'
@@ -226,7 +234,7 @@ def is_logged_in(f):
         if 'logged_in' in session:
             return f(*args, **kwargs)
         else:
-            flash('Unauthorized, Please login', 'danger')
+            flash('Non autorisé, veuillez vous connecter', 'danger')
             return redirect(url_for('login'))
     return wrap
 
@@ -236,7 +244,7 @@ def admin_required(f):
         if 'logged_in' in session and 'is_admin' in session:
             return f(*args, **kwargs)
         else:
-            flash('Unauthorized, admin access required', 'danger')
+            flash('Non autorisé, accès administrateur requis', 'danger')
             return redirect(url_for('login'))
     return wrap
 
@@ -245,7 +253,7 @@ def admin_required(f):
 @is_logged_in
 def logout():
     session.clear()
-    flash('You are now logged out', 'success')
+    flash('Vous êtes maintenant déconnecté', 'success')
     return redirect(url_for('login'))
 
 @app.route('/admin_dashboard', methods=['GET', 'POST'])
@@ -279,10 +287,10 @@ def dashboard():
         if calendar:
             return render_template('dashboard.html', calendar=calendar, list=list)
         else:
-            msg = 'No Events Created'
+            msg = 'Aucun événement créé'
             return render_template('dashboard.html', msg=msg)
     else:
-        flash('User not found', 'danger')
+        flash('Événement créé', 'danger')
         return redirect(url_for('login'))
 
 #Admin
@@ -297,10 +305,10 @@ def admin():
         if calendar:
             return render_template('admin.html', calendar=calendar)
         else:
-            msg = 'No Events or Supps to Process'
+            msg = 'Aucun événement ou suppléments à traiter'
             return render_template('admin.html', msg=msg)
     else:
-        flash('User not found', 'danger')
+        flash('Utilisateur non trouvé', 'danger')
         return redirect(url_for('login'))
 
 
@@ -325,7 +333,7 @@ def add_events():
         email = user.email
         send_notification_email(email, title, type, start, end)
 
-        flash('Event Created', 'success')
+        flash('Événement créé', 'success')
         return redirect(url_for('dashboard'))
     return render_template('add_events.html', form=form)
 
@@ -337,7 +345,7 @@ def accept_event(event_id):
         event.is_valid = True
         event.is_processed = True
         db.session.commit()
-        flash('Event accepted', 'success')
+        flash('Événement accepté', 'success')
         send_event_answer_email(event.user, event.title, event.type, event.start, event.end, 'accepté')
     else:
         flash('Invalid event or already processed', 'danger')
@@ -351,10 +359,10 @@ def reject_event(event_id):
         event.is_valid = False
         event.is_processed = True
         db.session.commit()
-        flash('Event rejected', 'success')
+        flash('Événement rejeté', 'success')
         send_event_answer_email(event.user, event.title, event.type, event.start, event.end, 'refusé')
     else:
-        flash('Invalid event or already processed', 'danger')
+        flash('Événement invalide ou déjà traité', 'danger')
     return redirect(url_for('admin'))
 
 @app.route('/remove_event/<int:event_id>', methods=['POST'])
@@ -364,7 +372,7 @@ def remove_event(event_id):
     if event and not event.is_processed:
         db.session.delete(event)
         db.session.commit()
-        flash('Event deleted', 'success')
+        flash('Événement supprimé', 'success')
     calendar = Event.query.filter_by(user=session['email']).all()
 
     events = []
