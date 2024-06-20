@@ -14,8 +14,8 @@ from templates.auth.rest_password_email_content import (reset_password_email_htm
 from templates.auth.notification_email_content import (notification_email_html_content)
 from templates.auth.answer_email_content import (answer_email_content)
 
-#from dotenv import load_dotenv
-#load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 
 #Access Environment Variables
 secret_key = os.getenv("SECRET_KEY")
