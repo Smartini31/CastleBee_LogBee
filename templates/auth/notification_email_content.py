@@ -8,6 +8,6 @@ notification_email_html_content = """
     <li><strong>Date et heure de début :</strong> {{ event_start }}</li>
     <li><strong>Date et heure de fin :</strong> {{ event_end }}</li>
 </ul>
-<p>Merci de bien vouloir examiner et traiter cet événement dès que possible <a href="http://127.0.0.1:5000/login">ici</a>.</p>
+<p>Merci de bien vouloir examiner et traiter cet événement dès que possible</p>
 <p>Merci !</p>
 """
