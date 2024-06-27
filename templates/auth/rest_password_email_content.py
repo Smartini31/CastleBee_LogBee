@@ -1,16 +1,12 @@
 reset_password_email_html_content = """
-<p>Hello,</p>
-<p>You are receiving this email because you requested a password reset for your account.</p>
+<p>Bonjour,</p>
+<p>Vous recevez cet e-mail car vous avez demandé une réinitialisation de mot de passe pour votre compte.</p>
 <p>
-    To reset your password
-    <a href="{{ reset_password_url }}">click here</a>.
+    Pour réinitialiser votre mot de passe coller le lien ci dessous apres le '.io' de l'URL: <br>
+    <a href="{{ reset_password_url }}">cliquez ici</a>.
 </p>
+<p>Si vous n'avez pas demandé de réinitialisation de mot de passe, veuillez contacter quelqu'un de l'équipe de développement.</p>
 <p>
-    Alternatively, you can paste the following link in your browser's address bar: <br>
-    {{ reset_password_url }}
-</p>
-<p>If you have not requested a password reset please contact someone from the development team.</p>
-<p>
-    Thank you!
+    Merci !
 </p>
 """

@@ -175,6 +175,7 @@ def register():
     if form.validate_on_submit():
         email = form.email.data
         password = sha256_crypt.encrypt(str(form.password.data))
+        answer = verfimail(email)
 
         #First check if the mail exists
         user = User.query.filter_by(email=email).first()
@@ -188,12 +189,17 @@ def register():
             else:
                 is_admin = False
 
-            new_user = User(email=email, password=password, is_admin=is_admin)
-            db.session.add(new_user)
-            db.session.commit()
+            #Check Mail validity
+            if answer == True:
+                new_user = User(email=email, password=password, is_admin=is_admin)
+                db.session.add(new_user)
+                db.session.commit()
 
-            flash('Vous êtes maintenant inscrit et pouvez vous connecter', 'success')
-            return redirect(url_for('login'))
+                flash('Vous êtes maintenant inscrit et pouvez vous connecter', 'success')
+                return redirect(url_for('login'))
+            else:
+                flash('Votre mail ne correspond pas')
+                return redirect(url_for('login'))
 
     return render_template('register.html', form=form)
 
@@ -470,6 +476,14 @@ def cut_email(email):
     stripped = email.split(sep, 1)[0]
     
     return stripped
+
+def verfimail(mail):
+    end = '@castlebee.fr'
+    if end in mail:
+        answer = True
+    else:
+        answer = False
+    return answer
 
 def generate_reset_password_token(user):
     #Changer ici pour ne pas avoir la cle secrete dans le code quand ca bougera dans les configs
